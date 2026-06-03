@@ -1,0 +1,6 @@
+node_modules
+dist
+.env.local
+.env
+*.md
+r1-radio-mock.html

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>R1 RADIO — Tuning Dial mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0c10; --panel:#14161c; --panel-2:#191c24;
+    --ink:#F0EDE8; --mute:#70747e; --line:#23262f;
+    --accent:#FF4500; --accent-dim:#7a2407;
+    --screen-w:260px; --screen-h:344px;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    min-height:100vh; background:
+      radial-gradient(120% 90% at 50% -10%, #15171e 0%, var(--bg) 60%);
+    color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px; padding:32px 16px;
+  }
+  .caption{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);}
+  .caption b{color:var(--accent);font-weight:600;}
+
+  /* ---------- device shell ---------- */
+  .device{
+    position:relative; display:flex; align-items:center; gap:0;
+    background:linear-gradient(160deg,#1c1f27,#0e1015);
+    border:1px solid #2a2e38; border-radius:30px; padding:22px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .device::after{ /* brand etch */
+    content:"r1 · radio"; position:absolute; bottom:9px; left:28px;
+    font-size:9px; letter-spacing:.3em; color:#3a3e48; text-transform:lowercase;
+  }
+  .screen-wrap{
+    width:var(--screen-w); height:var(--screen-h);
+    border-radius:14px; padding:6px;
+    background:#000; border:1px solid #2c303a;
+    box-shadow:inset 0 0 0 2px #07080b, 0 0 0 6px #101218;
+  }
+  /* right column: wheel + PTT */
+  .controls{display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+    height:var(--screen-h); margin-left:20px;}
+  .wheel{
+    width:58px;height:58px;border-radius:50%; cursor:grab;
+    background:conic-gradient(from 0deg,#2a2e38,#16181f,#2a2e38,#16181f,#2a2e38);
+    border:1px solid #33384400; box-shadow:0 6px 14px rgba(0,0,0,.5), inset 0 0 0 6px #0e1015, inset 0 2px 6px rgba(0,0,0,.6);
+    display:flex;align-items:center;justify-content:center; position:relative;
+  }
+  .wheel::before{content:"";width:18px;height:18px;border-radius:50%;background:#0c0d12;border:1px solid #2a2e38;}
+  .wheel .nub{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:3px;height:8px;background:var(--accent);border-radius:2px;}
+  .ptt{width:14px;height:120px;border-radius:8px;background:linear-gradient(#ff5a1f,#cf3500);
+    box-shadow:0 4px 10px rgba(255,69,0,.25), inset 0 1px 0 rgba(255,255,255,.3);cursor:pointer;}
+  .controls .caption{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;}
+
+  /* ---------- screen ---------- */
+  .screen{
+    position:relative; width:100%; height:100%; border-radius:10px; overflow:hidden;
+    background:radial-gradient(140% 120% at 50% 0%, #16181f 0%, #0c0d11 70%);
+    display:flex; flex-direction:column;
+  }
+  .screen::after{ /* grain / scanlines */
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+  /* status bar */
+  .statusbar{display:flex;align-items:center;justify-content:space-between;
+    padding:9px 11px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:.16em;color:var(--mute);}
+  .statusbar .live{display:flex;align-items:center;gap:5px;text-transform:uppercase;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#3a8d54;box-shadow:0 0 6px #3a8d54;}
+  .search-btn{background:none;border:1px solid var(--line);color:var(--ink);
+    font-family:inherit;font-size:9px;letter-spacing:.12em;padding:3px 8px;border-radius:6px;cursor:pointer;display:flex;gap:5px;align-items:center;}
+  .search-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* views */
+  .view{flex:1;display:none;flex-direction:column;}
+  .view.active{display:flex;}
+
+  /* ===== BROWSE / DIAL ===== */
+  #browse{justify-content:center;}
+  .dial{position:relative;height:170px;overflow:hidden;}
+  .needle{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--accent);
+    transform:translateX(-50%);z-index:3;box-shadow:0 0 10px var(--accent);}
+  .needle::before,.needle::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
+    border-left:5px solid transparent;border-right:5px solid transparent;}
+  .needle::before{top:0;border-top:6px solid var(--accent);}
+  .needle::after{bottom:0;border-bottom:6px solid var(--accent);}
+  .filmstrip{position:absolute;top:50%;left:50%;display:flex;gap:14px;align-items:center;
+    transition:transform .28s cubic-bezier(.22,.61,.36,1);will-change:transform;}
+  .chip{width:78px;flex:0 0 78px;height:118px;border-radius:12px;
+    background:var(--panel);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    transition:transform .28s,opacity .28s,border-color .28s;opacity:.4;transform:scale(.82);}
+  .chip .logo{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:700;color:#0b0c10;}
+  .chip .nm{font-size:9px;color:var(--mute);text-align:center;line-height:1.2;padding:0 4px;}
+  .chip.center{opacity:1;transform:scale(1.06);border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), 0 8px 26px rgba(255,69,0,.18);}
+  .dial-meta{text-align:center;padding:14px 10px 10px;}
+  .dial-meta .stn{font-size:15px;font-weight:600;letter-spacing:.02em;}
+  .dial-meta .sub{font-size:9px;color:var(--mute);letter-spacing:.18em;text-transform:uppercase;margin-top:6px;}
+  .hint{text-align:center;font-size:9px;color:var(--accent);letter-spacing:.2em;
+    text-transform:uppercase;margin-top:auto;padding:10px;animation:blink 2.4s infinite;}
+  @keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
+
+  /* ===== PLAYING ===== */
+  #playing{align-items:center;justify-content:center;gap:14px;padding:18px 14px;}
+  .np-logo{width:96px;height:96px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+    font-size:34px;font-weight:700;color:#0b0c10;box-shadow:0 12px 40px rgba(0,0,0,.5);}
+  .np-name{font-size:16px;font-weight:600;text-align:center;}
+  .marquee{width:100%;overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);padding:7px 0;}
+  .marquee span{display:inline-block;padding-left:100%;animation:scroll 9s linear infinite;
+    font-size:10px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;}
+  @keyframes scroll{to{transform:translateX(-100%)}}
+  .vu{display:flex;align-items:flex-end;gap:3px;height:30px;}
+  .vu i{width:4px;background:var(--accent);border-radius:1px;height:4px;opacity:.85;}
+  .transport{font-size:9px;letter-spacing:.2em;color:var(--mute);text-transform:uppercase;}
+
+  /* ===== SEARCH ===== */
+  #search{padding:12px;gap:10px;}
+  .search-field{display:flex;align-items:center;gap:8px;border:1px solid var(--accent);
+    border-radius:8px;padding:8px 10px;background:#0c0d12;}
+  .search-field input{flex:1;background:none;border:none;outline:none;color:var(--ink);
+    font-family:inherit;font-size:12px;}
+  .search-field input::placeholder{color:var(--mute);}
+  .results{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;}
+  .result{display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--line);
+    border-radius:8px;cursor:pointer;}
+  .result:hover,.result.sel{border-color:var(--accent);background:var(--panel-2);}
+  .result .logo{width:30px;height:30px;border-radius:7px;flex:0 0 30px;display:flex;
+    align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0b0c10;}
+  .result .info{display:flex;flex-direction:column;gap:2px;overflow:hidden;}
+  .result .info .r-nm{font-size:11px;font-weight:500;}
+  .result .info .r-sub{font-size:8px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .kbd-note{font-size:8px;color:var(--mute);letter-spacing:.12em;text-align:center;text-transform:uppercase;}
+
+  .legend{max-width:var(--screen-w);text-align:center;line-height:1.7;}
+  .legend code{color:var(--accent);background:#16181f;padding:1px 6px;border-radius:4px;font-size:10px;}
+</style>
+</head>
+<body>
+  <div class="caption">RABBIT R1 · <b>TUNING DIAL</b> · UI MOCK</div>
+
+  <div class="device">
+    <div class="screen-wrap">
+      <div class="screen">
+        <!-- status -->
+        <div class="statusbar">
+          <div class="live"><span class="dot"></span><span id="stat">ON AIR</span></div>
+          <button class="search-btn" id="openSearch">⌕ SEARCH</button>
+        </div>
+
+        <!-- BROWSE / DIAL -->
+        <div class="view active" id="browse">
+          <div class="dial">
+            <div class="needle"></div>
+            <div class="filmstrip" id="film"></div>
+          </div>
+          <div class="dial-meta">
+            <div class="stn" id="dialName">—</div>
+            <div class="sub" id="dialSub">spin to tune</div>
+          </div>
+          <div class="hint">▼ push to play</div>
+        </div>
+
+        <!-- PLAYING -->
+        <div class="view" id="playing">
+          <div class="np-logo" id="npLogo">E</div>
+          <div class="np-name" id="npName">—</div>
+          <div class="vu" id="vu"></div>
+          <div class="marquee"><span id="npTrack">now playing…</span></div>
+          <div class="transport" id="transport">▶ playing — tap to pause</div>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="view" id="search">
+          <div class="search-field">
+            <span style="color:var(--accent)">⌕</span>
+            <input id="q" placeholder="type a station…" autocomplete="off" />
+          </div>
+          <div class="results" id="results"></div>
+          <div class="kbd-note">type · or hold ⬛ to dictate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="caption">tune</div>
+      <div class="wheel" id="wheel" title="scroll / drag to tune"><span class="nub"></span></div>
+      <div class="ptt" id="ptt" title="play / hold = voice"></div>
+      <div class="caption">talk</div>
+    </div>
+  </div>
+
+  <div class="caption legend">
+    scroll / <code>← →</code> on the wheel to tune ·
+    <code>enter</code> or ⬛ to play · <code>⌕</code> for text search · <code>esc</code> back
+  </div>
+
+<script>
+  // ---- mock catalog (the real app fetches /browse + /search from the VPS proxy) ----
+  const STATIONS = [
+    {id:"s1", name:"Rádio Eldorado FM", sub:"São Paulo · MPB", color:"#FF4500", track:"Tim Maia — Você"},
+    {id:"s2", name:"Classic Hard Rock", sub:"Worldwide · Rock", color:"#e8b04b", track:"Whitesnake — Here I Go Again"},
+    {id:"s3", name:"Eruption FM", sub:"USA · 80s Rock", color:"#d96a3a", track:"Van Halen — Panama"},
+    {id:"s4", name:"Antena 1", sub:"Brasil · Soft Rock", color:"#5aa0d6", track:"Toto — Africa"},
+    {id:"s5", name:"Kerrang! Radio", sub:"UK · Metal", color:"#c43a3a", track:"Stone Sour — Through Glass"},
+    {id:"s6", name:"Jazz24", sub:"Seattle · Jazz", color:"#7d8bd6", track:"Miles Davis — So What"},
+    {id:"s7", name:"Lofi Beats", sub:"Stream · Chill", color:"#6abf9a", track:"untitled — focus"},
+    {id:"s8", name:"BBC Radio 6", sub:"UK · Alt", color:"#d6a05a", track:"Radiohead — Idioteca"},
+  ];
+  const initials = n => n.replace(/[^A-Za-z0-9 ]/g,"").split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+  const CHIP_W = 92; // 78 + 14 gap
+  let mode = "browse", index = 0, playing = false, selResult = 0, results = [];
+
+  const film = document.getElementById("film");
+  STATIONS.forEach((s,i)=>{
+    const c = document.createElement("div");
+    c.className = "chip"; c.dataset.i = i;
+    c.innerHTML = `<div class="logo" style="background:${s.color}">${initials(s.name)}</div><div class="nm">${s.name}</div>`;
+    c.onclick = ()=>{ index=i; renderDial(); tune(); };
+    film.appendChild(c);
+  });
+
+  function renderDial(){
+    film.style.transform = `translate(calc(-50% - ${index*CHIP_W}px - 39px), -50%)`;
+    [...film.children].forEach((c,i)=>c.classList.toggle("center", i===index));
+    const s = STATIONS[index];
+    document.getElementById("dialName").textContent = s.name;
+    document.getElementById("dialSub").textContent = s.sub;
+  }
+
+  function show(v){
+    mode = v;
+    document.querySelectorAll(".view").forEach(el=>el.classList.remove("active"));
+    document.getElementById(v).classList.add("active");
+    document.getElementById("openSearch").style.visibility = v==="search" ? "hidden":"visible";
+  }
+
+  function tune(){
+    const s = STATIONS[index];
+    document.getElementById("npLogo").textContent = initials(s.name);
+    document.getElementById("npLogo").style.background = s.color;
+    document.getElementById("npName").textContent = s.name;
+    document.getElementById("npTrack").textContent = "♪ "+s.track+"  ·  "+s.sub+"  ·  ";
+    document.getElementById("stat").textContent = "STREAMING";
+    playing = true;
+    document.getElementById("transport").textContent = "▶ playing — tap to pause";
+    show("playing");
+  }
+  function togglePlay(){
+    playing = !playing;
+    document.getElementById("transport").textContent = playing ? "▶ playing — tap to pause" : "⏸ paused — tap to play";
+    document.getElementById("stat").textContent = playing ? "STREAMING" : "PAUSED";
+  }
+
+  // ---- VU meter (mock; real app taps a WebAudio AnalyserNode) ----
+  const vu = document.getElementById("vu");
+  for(let i=0;i<16;i++){ const b=document.createElement("i"); vu.appendChild(b); }
+  (function animate(){
+    [...vu.children].forEach((b,i)=>{
+      const h = playing ? 4 + Math.abs(Math.sin(Date.now()/180 + i)) * (8+Math.random()*20) : 4;
+      b.style.height = h+"px"; b.style.opacity = playing ? .85 : .25;
+    });
+    requestAnimationFrame(animate);
+  })();
+
+  // ---- search ----
+  const q = document.getElementById("q"), resBox = document.getElementById("results");
+  function renderResults(){
+    const term = q.value.toLowerCase().trim();
+    results = STATIONS.filter(s => !term || s.name.toLowerCase().includes(term) || s.sub.toLowerCase().includes(term));
+    selResult = 0;
+    resBox.innerHTML = results.map((s,i)=>`
+      <div class="result ${i===0?'sel':''}" data-id="${s.id}">
+        <div class="logo" style="background:${s.color}">${initials(s.name)}</div>
+        <div class="info"><div class="r-nm">${s.name}</div><div class="r-sub">${s.sub}</div></div>
+      </div>`).join("") || `<div class="kbd-note" style="padding:14px">no stations</div>`;
+    [...resBox.children].forEach(el=>{
+      el.onclick = ()=>{ const i = STATIONS.findIndex(s=>s.id===el.dataset.id); if(i>=0){index=i; renderDial(); tune();} };
+    });
+  }
+  document.getElementById("openSearch").onclick = ()=>{ show("search"); q.value=""; renderResults(); q.focus(); };
+  q.addEventListener("input", renderResults);
+
+  // ---- inputs: wheel / keys / ptt ----
+  document.querySelector(".screen").addEventListener("wheel",(e)=>{
+    if(mode==="search") return; e.preventDefault();
+    index = Math.max(0, Math.min(STATIONS.length-1, index + (e.deltaY>0?1:-1)));
+    if(mode!=="browse") show("browse"); renderDial();
+  },{passive:false});
+
+  // drag the physical wheel graphic
+  let dragY=null;
+  const wheel = document.getElementById("wheel");
+  wheel.addEventListener("pointerdown",e=>{dragY=e.clientY;wheel.style.cursor="grabbing";});
+  window.addEventListener("pointermove",e=>{
+    if(dragY===null) return;
+    if(Math.abs(e.clientY-dragY)>16){
+      index = Math.max(0,Math.min(STATIONS.length-1, index + (e.clientY>dragY?1:-1)));
+      dragY=e.clientY; if(mode!=="browse")show("browse"); renderDial();
+    }
+  });
+  window.addEventListener("pointerup",()=>{dragY=null;wheel.style.cursor="grab";});
+  wheel.querySelector(".nub")?.style && (wheel.onclick=null);
+
+  document.getElementById("ptt").onclick = ()=>{ if(mode==="playing") togglePlay(); else tune(); };
+
+  document.addEventListener("keydown",(e)=>{
+    if(mode==="search"){
+      if(e.key==="Escape") show("browse");
+      if(e.key==="ArrowDown"||e.key==="ArrowUp"){
+        e.preventDefault(); selResult = Math.max(0,Math.min(results.length-1, selResult+(e.key==="ArrowDown"?1:-1)));
+        [...resBox.children].forEach((el,i)=>el.classList.toggle("sel",i===selResult));
+      }
+      if(e.key==="Enter" && results[selResult]){ index=STATIONS.findIndex(s=>s.id===results[selResult].id); renderDial(); tune(); }
+      return;
+    }
+    if(e.key==="ArrowRight"||e.key==="ArrowDown"){ index=Math.min(STATIONS.length-1,index+1); renderDial(); }
+    if(e.key==="ArrowLeft"||e.key==="ArrowUp"){ index=Math.max(0,index-1); renderDial(); }
+    if(e.key==="Enter"){ if(mode==="playing") togglePlay(); else tune(); }
+    if(e.key==="Escape"){ show("browse"); document.getElementById("stat").textContent="ON AIR"; }
+  });
+
+  renderDial();
+</script>
+</body>
+</html>

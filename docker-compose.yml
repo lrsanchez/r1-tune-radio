@@ -1,0 +1,13 @@
+services:
+  radio:
+    build:
+      context: .
+      args:
+        VITE_TOKEN: ${VITE_TOKEN:-r1-radio-2026}
+        VITE_PIN: ${VITE_PIN:-000000}
+    ports:
+      - "15000:15000"
+    environment:
+      TOKEN: ${TOKEN:-r1-radio-2026}
+      PORT: 15000
+    restart: unless-stopped

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no" />
+  <title>R1 RADIO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="caption">RABBIT R1 · <b>TUNING DIAL</b></div>
+
+  <div class="device">
+    <div class="screen-wrap">
+      <div class="screen">
+        <!-- PIN lock screen -->
+        <div class="view active" id="lock">
+          <div class="lock-top">
+            <span class="lock-label">r1 radio</span>
+            <span class="lock-sub">enter pin</span>
+          </div>
+          <div class="pair-digits" id="lockDigits"></div>
+          <div class="err" id="lockErr"></div>
+          <div class="numpad">
+            <div class="np-row">
+              <button class="np-btn" data-k="1">1</button>
+              <button class="np-btn" data-k="2">2</button>
+              <button class="np-btn" data-k="3">3</button>
+            </div>
+            <div class="np-row">
+              <button class="np-btn" data-k="4">4</button>
+              <button class="np-btn" data-k="5">5</button>
+              <button class="np-btn" data-k="6">6</button>
+            </div>
+            <div class="np-row">
+              <button class="np-btn" data-k="7">7</button>
+              <button class="np-btn" data-k="8">8</button>
+              <button class="np-btn" data-k="9">9</button>
+            </div>
+            <div class="np-row">
+              <button class="np-btn np-del" data-k="del">⌫</button>
+              <button class="np-btn" data-k="0">0</button>
+              <button class="np-btn np-ok" data-k="ok">OK</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- status bar -->
+        <div class="statusbar">
+          <div class="live"><span class="dot"></span><span id="stat">ON AIR</span></div>
+          <button class="search-btn" id="openSearch">⌕ SEARCH</button>
+        </div>
+
+        <!-- BROWSE / DIAL -->
+        <div class="view active" id="browse">
+          <div class="dial">
+            <div class="needle"></div>
+            <div class="filmstrip" id="film"></div>
+          </div>
+          <div class="dial-meta">
+            <div class="stn" id="dialName">—</div>
+            <div class="sub" id="dialSub">loading…</div>
+          </div>
+          <div class="hint" id="hint">▼ push to play</div>
+        </div>
+
+        <!-- PLAYING -->
+        <div class="view" id="playing">
+          <div class="np-logo" id="npLogo"></div>
+          <div class="play-state" id="playState">▶</div>
+          <div class="np-name" id="npName">—</div>
+          <div class="vu" id="vu"></div>
+          <div class="marquee"><span id="npTrack">now playing…</span></div>
+          <div class="transport" id="transport">▶ playing — tap to pause</div>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="view" id="search">
+          <div class="search-field">
+            <span style="color:var(--accent)">⌕</span>
+            <input id="q" placeholder="type a station…" autocomplete="off" />
+          </div>
+          <div class="results" id="results"></div>
+          <div class="kbd-note">scroll to pick · push ⬛ to go back</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="caption">tune</div>
+      <div class="wheel" id="wheel" title="scroll / drag to tune"><span class="nub"></span></div>
+      <div class="ptt" id="ptt" title="play / hold = voice"></div>
+      <div class="caption">talk</div>
+    </div>
+  </div>
+
+  <div class="caption legend">
+    scroll / <code>← →</code> on the wheel to tune ·
+    <code>enter</code> or ⬛ to play · <code>⌕</code> for text search · <code>esc</code> back
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
