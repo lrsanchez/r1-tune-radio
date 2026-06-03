@@ -227,7 +227,7 @@ body {
   font-weight: 700;
   color: #0b0c10;
 }
-.chip .nm { font-size: 9px; color: var(--mute); text-align: center; line-height: 1.2; padding: 0 4px; }
+.chip .nm { font-size: 11px; color: var(--ink); text-align: center; line-height: 1.2; padding: 0 4px; }
 .chip.center {
   opacity: 1;
   transform: scale(1.06);
