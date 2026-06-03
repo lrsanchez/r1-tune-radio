@@ -27,7 +27,7 @@ R1 Creation ──(data plane: audio bytes)────────────�
   `.pls`/`.m3u` playlists, missing CORS) is quarantined there.
 
 ## Proxy contract (the only API the client knows)
-Base: `https://radio.lsz.wtf` — every request carries `?token=<STATIC_TOKEN>`.
+Base: `https://r1-radio.lsz.wtf` — every request carries `?token=<STATIC_TOKEN>`.
 - `GET /browse?id=<id>` → `{ links:[{id,title}], stations:[Station] }` (root if no id)
 - `GET /search?q=<term>` → `{ stations:[Station] }`  ← used by BOTH text and voice search
 - `GET /tune?id=<id>` → `{ stream, codec, bitrate }`  ← direct playable URL

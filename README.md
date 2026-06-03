@@ -9,7 +9,7 @@ An internet radio player built as a **Rabbit R1 Creation**. Browse live stations
 ## How it works
 
 ```
-R1 Creation ──(control: JSON)──► radio.lsz.wtf ──► Node proxy ──► opml.radiotime.com
+R1 Creation ──(control: JSON)──► r1-radio.lsz.wtf ──► Node proxy ──► opml.radiotime.com
 R1 Creation ──(audio: bytes)────────────────────────────────────► station CDN (direct)
 ```
 
@@ -96,7 +96,7 @@ Then proxy via nginx:
 
 ```nginx
 server {
-    server_name radio.lsz.wtf;
+    server_name r1-radio.lsz.wtf;
 
     location / {
         proxy_pass http://localhost:15000;
